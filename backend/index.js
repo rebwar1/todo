@@ -4,6 +4,9 @@ import mysql from "mysql2"; // Import mysql2 library
 
 const app = express(); // create an express app
 
+app.use(cors()); // enable Cross Origin Resource Sharing
+app.use(express.json()); // enable req.body JSON data
+
 // Create a MySQL connection
 const db = mysql.createConnection({
   host: "localhost",
@@ -22,8 +25,6 @@ db.connect(err => {
 });
 
 // middleware
-app.use(cors());
-app.use(express.json());
 
 // routes
 //post a todo
@@ -92,8 +93,72 @@ app.get("/todos", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.json({ message: "Hello World" });
+//get a todo
+app.get("/todos/:id", async (req, res) => {
+  try {
+    const { id } = req.params; // without destructuring: const id = req.params.id;
+
+    // Use db.promise() to create a promise-based connection
+    const [rows] = await db
+      .promise()
+      .execute("SELECT * FROM todo WHERE id = ?", [id]); //WHERE id means the id column in the table
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//update a todo
+app.put("/todos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description } = req.body;
+
+    // Use db.promise() to create a promise-based connection
+
+    const [result] = await db
+      .promise()
+      .execute("UPDATE todo SET description = ? WHERE id = ?", [
+        description,
+        id,
+      ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+
+    res.json({ message: "Todo was updated" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//delete a todo
+app.delete("/todos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Use db.promise() to create a promise-based connection
+    const [result] = await db
+      .promise()
+      .execute("DELETE FROM todo WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+
+    res.json({ message: "Todo was deleted" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 app.listen(5001, () => console.log("Server running on port 5001"));
