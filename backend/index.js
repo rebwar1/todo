@@ -8,11 +8,19 @@ app.use(cors()); // enable Cross Origin Resource Sharing
 app.use(express.json()); // enable req.body JSON data
 
 // Create a MySQL connection
+// const db = mysql.createConnection({
+//   host: "localhost",
+//   user: "todotest",
+//   password: "123",
+//   database: "todo_mysql",
+// });
+// Create a MySQL connection with multipleStatements option
 const db = mysql.createConnection({
   host: "localhost",
   user: "todotest",
   password: "123",
   database: "todo_mysql",
+  multipleStatements: true, // Enable multiple statements
 });
 
 db.connect(err => {
